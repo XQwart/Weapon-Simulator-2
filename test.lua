@@ -1,5 +1,5 @@
 --[[
-    STKLib v1.0.0
+    STKLib v1.0.1
     A modern, professional GUI library for Roblox.
 ]]
 
@@ -13,7 +13,7 @@ local Players = game:GetService("Players")
 local STKLib = {}
 STKLib.Objects = {}
 STKLib.Elements = {}
-STKLib.Version = "1.0.0"
+STKLib.Version = "1.0.1"
 STKLib.Instance = nil  -- Track the single instance of the library
 
 -- /////////////////////////////////////////////////////////////////////////////
@@ -21,16 +21,16 @@ STKLib.Instance = nil  -- Track the single instance of the library
 -- /////////////////////////////////////////////////////////////////////////////
 
 STKLib.Theme = {
-    Background = Color3.fromRGB(30, 30, 30),    -- Dark gray background
+    Background = Color3.fromRGB(18, 18, 18),    -- Darker background (#181818)
     Accent = Color3.fromRGB(255, 165, 0),       -- Orange accent
     Text = Color3.fromRGB(255, 255, 255),       -- White text
     SecondaryText = Color3.fromRGB(160, 160, 160),
-    Secondary = Color3.fromRGB(50, 50, 50),
+    Secondary = Color3.fromRGB(40, 40, 40),      -- Darker secondary color
 
     Font = Enum.Font.Gotham,
     FontBold = Enum.Font.GothamBold,
 
-    Transparency = 0.2, -- Transparency for a glass-like effect
+    Transparency = 0.3, -- Transparency for a glass-like effect
     AnimationSpeed = 0.2
 }
 
@@ -93,8 +93,8 @@ function STKLib:Load(options)
     self:InitializeUI()
     self:SetupInput()
 
-    -- Add the essential Config tab
-    self:AddConfigTab()
+    -- Add the essential Settings tab by default
+    self:AddSettingsTab()
 
     return self
 end
@@ -119,7 +119,7 @@ function STKLib.Objects.Window:InitializeUI()
         Visible = true  -- Set to true for initial visibility
     })
     
-    local corner = Utils.Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = self.MainFrame })
+    Utils.Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = self.MainFrame })
     
     -- Header
     self.Header = Utils.Create("Frame", {
@@ -292,150 +292,51 @@ function STKLib.Objects.Window:SetActiveTab(tabToActivate)
 end
 
 -- /////////////////////////////////////////////////////////////////////////////
--- SUB-TAB CLASS
+-- SETTINGS TAB CLASS
 -- /////////////////////////////////////////////////////////////////////////////
 
-STKLib.Objects.SubTab = {}
-STKLib.Objects.SubTab.__index = STKLib.Objects.SubTab
+function STKLib.Objects.Window:AddSettingsTab()
+    local settingsTab = self:AddTab("Settings")
+    local mainSubTab = settingsTab:AddSubTab("Manage Configs")
 
-function STKLib.Objects.Tab:AddSubTab(name)
-    local tab = self
-    local subTab = setmetatable({}, STKLib.Objects.SubTab)
+    -- Settings content
+    mainSubTab:AddLabel("Configuration Management")
     
-    subTab.Name = name
-    subTab.ParentTab = tab
-    
-    -- Create the left-side button
-    subTab.Button = Utils.Create("TextButton", {
-        Name = name,
-        Size = UDim2.new(1, -20, 0, 30),
-        BackgroundColor3 = STKLib.Theme.Background,
-        Font = STKLib.Theme.Font,
-        Text = name,
-        TextColor3 = STKLib.Theme.SecondaryText,
-        TextSize = 14,
-        Parent = tab.Window.ContentContainer
-    })
-    
-    -- Content area for this sub-tab
-    subTab.Content = Utils.Create("ScrollingFrame", {
-        Name = name.."_Content",
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        CanvasSize = UDim2.new(0, 0, 2, 0),
-        ScrollBarThickness = 4,
-        ScrollBarImageColor3 = STKLib.Theme.Accent,
-        Visible = false,
-        Parent = tab.Window.ContentContainer
-    })
-    
-    subTab.Button.MouseButton1Click:Connect(function()
-        tab:SetActiveSubTab(subTab)
-    end)
-    
-    table.insert(tab.SubTabs, subTab)
-    
-    if not tab.ActiveSubTab then
-        tab:SetActiveSubTab(subTab)
-    end
-    
-    return subTab
-end
-
-function STKLib.Objects.Tab:SetActiveSubTab(subTabToActivate)
-    if self.ActiveSubTab == subTabToActivate then return end
-    
-    for _, subTab in ipairs(self.SubTabs) do
-        local isActive = (subTab == subTabToActivate)
-        subTab.Content.Visible = isActive
-        subTab.Button.BackgroundColor3 = isActive and STKLib.Theme.Secondary or STKLib.Theme.Background
-        subTab.Button.TextColor3 = isActive and STKLib.Theme.Text or STKLib.Theme.SecondaryText
-    end
-    
-    self.ActiveSubTab = subTabToActivate
-end
-
--- /////////////////////////////////////////////////////////////////////////////
--- ELEMENT: LABEL
--- /////////////////////////////////////////////////////////////////////////////
-function STKLib.Objects.SubTab:AddLabel(text)
-    local label = Utils.Create("TextLabel", {
-        Text = text,
-        Size = UDim2.new(1, 0, 0, 20),
-        BackgroundTransparency = 1,
-        Font = STKLib.Theme.FontBold,
-        TextColor3 = STKLib.Theme.Text,
-        TextSize = 16,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = self.Content
-    })
-    return label
-end
-
--- /////////////////////////////////////////////////////////////////////////////
--- ELEMENT: CHECKBOX
--- /////////////////////////////////////////////////////////////////////////////
-STKLib.Elements.Checkbox = {}
-STKLib.Elements.Checkbox.__index = STKLib.Elements.Checkbox
-
-function STKLib.Objects.SubTab:AddCheckbox(options)
-    local subTab = self
-    options = options or {}
-    
-    local element = setmetatable({}, STKLib.Elements.Checkbox)
-    element.Id = options.Id or Utils.GenerateId()
-    element.Value = options.Default or false
-    element.Callback = options.Callback or function() end
-    
-    local frame = Utils.Create("Frame", {
-        Name = options.Text or "Checkbox",
-        Size = UDim2.new(1, 0, 0, 20),
-        BackgroundTransparency = 1,
-        Parent = subTab.Content
-    })
-    
-    local label = Utils.Create("TextLabel", {
-        Name = "Label",
-        Size = UDim2.new(1, -30, 1, 0),
-        BackgroundTransparency = 1,
-        Font = STKLib.Theme.Font,
-        Text = options.Text or "Checkbox",
-        TextColor3 = STKLib.Theme.Text,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame
-    })
-    
-    local box = Utils.Create("ImageButton", {
-        Name = "Box",
-        Size = UDim2.fromOffset(20, 20),
-        Position = UDim2.new(1, -20, 0.5, -10),
+    local nameInput = Utils.Create("TextBox", {
+        Name = "ConfigNameInput",
+        Size = UDim2.new(1, 0, 0, 30),
         BackgroundColor3 = STKLib.Theme.Secondary,
-        Image = STKLib.Icons.Checkbox_Checked,
-        ImageTransparency = element.Value and 0 or 1,
-        Parent = frame
+        Font = STKLib.Theme.Font,
+        Text = "",
+        PlaceholderText = "Enter config name...",
+        TextColor3 = STKLib.Theme.Text,
+        TextSize = 14,
+        Parent = mainSubTab.Content
     })
-    Utils.Create("UICorner", { CornerRadius = UDim.new(0, 4), Parent = box })
-    
-    function element:SetValue(newValue, skipCallback)
-        newValue = not not newValue
-        if element.Value == newValue then return end
-        
-        element.Value = newValue
-        box.ImageTransparency = newValue and 0 or 1
-        
-        if not skipCallback then
-            element.Callback(newValue)
+    Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = nameInput})
+
+    local createBtn = Utils.Create("TextButton", {
+        Name = "CreateButton",
+        Size = UDim2.new(0.3, 0, 1, 0),
+        BackgroundColor3 = STKLib.Theme.Accent,
+        Font = STKLib.Theme.Font,
+        Text = "Create",
+        TextColor3 = STKLib.Theme.Text,
+        TextSize = 14,
+        Parent = mainSubTab.Content
+    })
+    Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = createBtn})
+
+    createBtn.MouseButton1Click:Connect(function()
+        local configName = nameInput.Text
+        if configName ~= "" then
+            -- Add your config saving logic here
+            print("Config '" .. configName .. "' created.")
+            nameInput.Text = ""
+        else
+            warn("Please enter a valid config name.")
         end
-    end
-    
-    box.MouseButton1Click:Connect(function()
-        element:SetValue(not element.Value)
     end)
-    
-    subTab.ParentTab.Window.Elements[element.Id] = element
-    return element
 end
 
 return STKLib
