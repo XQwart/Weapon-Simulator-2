@@ -1,7 +1,6 @@
 --[[
     STKLib v1.0.0
     A modern, professional GUI library for Roblox.
-    Designed by AI, inspired by top-tier utility interfaces.
 ]]
 
 -- Roblox Services
@@ -117,7 +116,7 @@ function STKLib.Objects.Window:InitializeUI()
         BorderSizePixel = 0,
         ClipsDescendants = true,
         Parent = self.ScreenGui,
-        Visible = false
+        Visible = true  -- Set to true for initial visibility
     })
     
     local corner = Utils.Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = self.MainFrame })
