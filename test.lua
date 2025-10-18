@@ -31,6 +31,7 @@ local STKLib = {}
 STKLib.Objects = {}
 STKLib.Elements = {}
 STKLib.Version = "1.0.0"
+STKLib.Instance = nil  -- Track the single instance of the library
 
 -- /////////////////////////////////////////////////////////////////////////////
 -- THEME & CONFIGURATION
@@ -93,6 +94,11 @@ STKLib.Objects.Window = {}
 STKLib.Objects.Window.__index = STKLib.Objects.Window
 
 function STKLib:Load(options)
+    if STKLib.Instance then
+        warn("STKLib: An instance is already loaded. Please close it before loading a new one.")
+        return STKLib.Instance
+    end
+
     options = options or {}
     local self = setmetatable({}, STKLib.Objects.Window)
 
@@ -105,10 +111,8 @@ function STKLib:Load(options)
     self.Visible = false
     self.Elements = {} -- Stores all elements by ID for config management
 
-    -- Prevent creating multiple UIs
-    local oldGui = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("STKLib_ScreenGui")
-    if oldGui then oldGui:Destroy() end
-    
+    STKLib.Instance = self  -- Set the single instance
+
     self:InitializeUI()
     self:SetupInput()
 
@@ -293,6 +297,7 @@ function STKLib.Objects.Window:Destroy()
             blur.Enabled = false
         end
     end
+    STKLib.Instance = nil  -- Reset the single instance
 end
 
 -- /////////////////////////////////////////////////////////////////////////////
@@ -884,6 +889,5 @@ function STKLib.Objects.Window:AddConfigTab()
     
     refreshConfigList()
 end
-
 
 return STKLib
