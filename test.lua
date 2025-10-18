@@ -7,24 +7,8 @@
 -- Roblox Services
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-
--- Compression/Encoding Libraries (Must be available in the execution environment)
--- In many executor environments, these are pre-loaded.
-local zlib = zlib or {}
-local base64 = base64 or {}
-
--- Fallbacks if libraries aren't present
-if not zlib.compress or not zlib.decompress then
-    warn("STKLib: ZLIB compression library not found. Config sharing will be disabled.")
-    zlib = nil
-end
-if not base64.encode or not base64.decode then
-    warn("STKLib: Base64 library not found. Config sharing will be disabled.")
-    base64 = nil
-end
 
 -- Main Library
 local STKLib = {}
@@ -40,26 +24,20 @@ STKLib.Instance = nil  -- Track the single instance of the library
 STKLib.Theme = {
     Background = Color3.fromRGB(24, 24, 24),    -- #181818
     Accent = Color3.fromRGB(255, 165, 0),       -- #FFA500
-    AccentDark = Color3.fromRGB(204, 132, 0),
     Text = Color3.fromRGB(255, 255, 255),
     SecondaryText = Color3.fromRGB(160, 160, 160),
     Secondary = Color3.fromRGB(40, 40, 40),
-    Tertiary = Color3.fromRGB(55, 55, 55),
-    Stroke = Color3.fromRGB(60, 60, 60),
 
     Font = Enum.Font.Gotham,
     FontBold = Enum.Font.GothamBold,
 
-    Transparency = 0.2, -- 0 is opaque, 1 is transparent. So 1 - 0.8 = 0.2
-    BlurSize = 24,
-
+    Transparency = 0.2, -- 0 is opaque, 1 is transparent.
     AnimationSpeed = 0.2
 }
 
 STKLib.Icons = {
     Checkbox_Checked = "rbxassetid://3926307971", -- Checkmark icon
-    Dropdown_Arrow = "rbxassetid://3926305904", -- Chevron down
-    Logo = "", -- User-defined: "rbxassetid://YOUR_LOGO_ID"
+    Logo = "rbxassetid://5123473691" -- Default logo
 }
 
 -- /////////////////////////////////////////////////////////////////////////////
@@ -130,11 +108,6 @@ function STKLib.Objects.Window:InitializeUI()
         ResetOnSpawn = false
     })
 
-    local blur = Utils.Create("BlurEffect", {
-        Size = STKLib.Theme.BlurSize,
-        Parent = game.Lighting
-    })
-
     self.MainFrame = Utils.Create("Frame", {
         Name = "MainFrame",
         Size = self.Size,
@@ -148,8 +121,7 @@ function STKLib.Objects.Window:InitializeUI()
     })
     
     local corner = Utils.Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = self.MainFrame })
-    local stroke = Utils.Create("UIStroke", { Color = STKLib.Theme.Accent, Thickness = 1.5, Parent = self.MainFrame })
-
+    
     -- Header
     self.Header = Utils.Create("Frame", {
         Name = "Header",
@@ -166,7 +138,7 @@ function STKLib.Objects.Window:InitializeUI()
         Size = UDim2.fromOffset(24, 24),
         Position = UDim2.fromOffset(10, 8),
         BackgroundTransparency = 1,
-        Image = STKLib.Icons.Logo or "rbxassetid://5123473691", -- Default Roblox studio logo
+        Image = STKLib.Icons.Logo,
         Parent = self.Header
     })
     
@@ -215,7 +187,7 @@ function STKLib.Objects.Window:InitializeUI()
         Size = UDim2.new(0, 150, 1, 0),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        CanvasSize = UDim2.new(0,0,0,0),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
         ScrollBarThickness = 4,
         ScrollBarImageColor3 = STKLib.Theme.Accent,
         Parent = self.Body
@@ -224,11 +196,6 @@ function STKLib.Objects.Window:InitializeUI()
         FillDirection = Enum.FillDirection.Vertical,
         SortOrder = Enum.SortOrder.LayoutOrder,
         Padding = UDim.new(0, 5),
-        Parent = self.SubTabContainer
-    })
-    local subTabPadding = Utils.Create("UIPadding", {
-        PaddingTop = UDim.new(0, 10),
-        PaddingLeft = UDim.new(0, 10),
         Parent = self.SubTabContainer
     })
 
@@ -264,12 +231,6 @@ function STKLib.Objects.Window:InitializeUI()
             end
         end
     end)
-    
-    -- Blur management
-    self.ScreenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
-        blur.Enabled = self.ScreenGui.Enabled
-    end)
-    blur.Enabled = self.ScreenGui.Enabled
 end
 
 function STKLib.Objects.Window:SetupInput()
@@ -283,19 +244,11 @@ end
 function STKLib.Objects.Window:Toggle()
     self.Visible = not self.Visible
     self.MainFrame.Visible = self.Visible
-    if self.Visible then
-        Utils.Tween(self.MainFrame, {Position = UDim2.new(0.5, -self.Size.X.Offset / 2, 0.5, -self.Size.Y.Offset / 2)})
-    end
 end
 
 function STKLib.Objects.Window:Destroy()
     if self.ScreenGui then
         self.ScreenGui:Destroy()
-        -- Find and disable the blur effect
-        local blur = game.Lighting:FindFirstChild("BlurEffect")
-        if blur and blur.Parent == game.Lighting then
-            blur.Enabled = false
-        end
     end
     STKLib.Instance = nil  -- Reset the single instance
 end
@@ -530,19 +483,17 @@ function STKLib.Objects.SubTab:AddCheckbox(options)
         Position = UDim2.new(1, -20, 0.5, -10),
         BackgroundColor3 = STKLib.Theme.Secondary,
         Image = STKLib.Icons.Checkbox_Checked,
-        ImageColor3 = STKLib.Theme.Accent,
         ImageTransparency = element.Value and 0 or 1,
         Parent = frame
     })
     Utils.Create("UICorner", { CornerRadius = UDim.new(0, 4), Parent = box })
-    Utils.Create("UIStroke", { Color = STKLib.Theme.Stroke, Parent = box })
     
     function element:SetValue(newValue, skipCallback)
         newValue = not not newValue
         if element.Value == newValue then return end
         
         element.Value = newValue
-        Utils.Tween(box, {ImageTransparency = newValue and 0 or 1})
+        box.ImageTransparency = newValue and 0 or 1
         
         if not skipCallback then
             element.Callback(newValue)
@@ -553,117 +504,6 @@ function STKLib.Objects.SubTab:AddCheckbox(options)
         element:SetValue(not element.Value)
     end)
     
-    subTab.ParentTab.Window.Elements[element.Id] = element
-    return element
-end
-
--- /////////////////////////////////////////////////////////////////////////////
--- ELEMENT: SLIDER
--- /////////////////////////////////////////////////////////////////////////////
-STKLib.Elements.Slider = {}
-STKLib.Elements.Slider.__index = STKLib.Elements.Slider
-
-function STKLib.Objects.SubTab:AddSlider(options)
-    local subTab = self
-    options = options or {}
-    
-    local element = setmetatable({}, STKLib.Elements.Slider)
-    element.Id = options.Id or Utils.GenerateId()
-    element.Min = options.Min or 0
-    element.Max = options.Max or 100
-    element.Value = options.Default or element.Min
-    element.Callback = options.Callback or function() end
-    
-    local frame = Utils.Create("Frame", {
-        Name = options.Text or "Slider",
-        Size = UDim2.new(1, 0, 0, 40),
-        BackgroundTransparency = 1,
-        Parent = subTab.Content
-    })
-
-    local label = Utils.Create("TextLabel", {
-        Name = "Label",
-        Size = UDim2.new(1, 0, 0, 20),
-        BackgroundTransparency = 1,
-        Font = STKLib.Theme.Font,
-        Text = options.Text or "Slider",
-        TextColor3 = STKLib.Theme.Text,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame
-    })
-
-    local valueLabel = Utils.Create("TextLabel", {
-        Name = "ValueLabel",
-        Size = UDim2.new(1, 0, 0, 20),
-        BackgroundTransparency = 1,
-        Font = STKLib.Theme.Font,
-        TextColor3 = STKLib.Theme.SecondaryText,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        Parent = frame
-    })
-    
-    local track = Utils.Create("Frame", {
-        Name = "Track",
-        Size = UDim2.new(1, 0, 0, 6),
-        Position = UDim2.new(0, 0, 0, 25),
-        BackgroundColor3 = STKLib.Theme.Secondary,
-        Parent = frame
-    })
-    Utils.Create("UICorner", {Parent = track})
-    
-    local fill = Utils.Create("Frame", {
-        Name = "Fill",
-        Size = UDim2.new(0, 0, 1, 0),
-        BackgroundColor3 = STKLib.Theme.Accent,
-        Parent = track
-    })
-    Utils.Create("UICorner", {Parent = fill})
-
-    local dragging = false
-    
-    function element:SetValue(newValue, skipCallback)
-        newValue = math.clamp(newValue, element.Min, element.Max)
-        if element.Value == newValue then return end
-        
-        element.Value = newValue
-        local percentage = (newValue - element.Min) / (element.Max - element.Min)
-        Utils.Tween(fill, { Size = UDim2.new(percentage, 0, 1, 0) })
-        valueLabel.Text = string.format("%.2f", newValue)
-        
-        if not skipCallback then
-            element.Callback(newValue)
-        end
-    end
-    
-    local function updateFromInput(input)
-        local pos = input.Position.X
-        local start = track.AbsolutePosition.X
-        local width = track.AbsoluteSize.X
-        local percentage = math.clamp((pos - start) / width, 0, 1)
-        local newValue = element.Min + (element.Max - element.Min) * percentage
-        element:SetValue(newValue)
-    end
-    
-    track.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            updateFromInput(input)
-        end
-    end)
-    track.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            updateFromInput(input)
-        end
-    end)
-
-    element:SetValue(element.Value, true)
     subTab.ParentTab.Window.Elements[element.Id] = element
     return element
 end
@@ -683,7 +523,7 @@ function STKLib.Objects.Window:AddConfigTab()
         Size = UDim2.new(1, 0, 0, 150),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        CanvasSize = UDim2.new(0,0,0,0),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
         ScrollBarThickness = 2,
         Parent = mainSubTab.Content
     })
@@ -708,7 +548,7 @@ function STKLib.Objects.Window:AddConfigTab()
     Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = nameInput})
     
     local buttonsFrame = Utils.Create("Frame", {
-        Size = UDim2.new(1,0,0,30),
+        Size = UDim2.new(1, 0, 0, 30),
         BackgroundTransparency = 1,
         Parent = mainSubTab.Content
     })
@@ -716,7 +556,7 @@ function STKLib.Objects.Window:AddConfigTab()
         FillDirection = Enum.FillDirection.Horizontal,
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
         VerticalAlignment = Enum.VerticalAlignment.Center,
-        Padding = UDim.new(0,10),
+        Padding = UDim.new(0, 10),
         Parent = buttonsFrame
     })
 
@@ -736,7 +576,6 @@ function STKLib.Objects.Window:AddConfigTab()
     end
 
     local createBtn = createButton("Create", buttonsFrame)
-    local importBtn = createButton("Import", buttonsFrame)
     
     -- Config state
     local configs = {}
@@ -744,7 +583,7 @@ function STKLib.Objects.Window:AddConfigTab()
     local function refreshConfigList()
         configListFrame:ClearAllChildren()
         
-        for name, data in pairs(configs) do
+        for name in pairs(configs) do
             local itemFrame = Utils.Create("Frame", {
                 Name = name,
                 Size = UDim2.new(1, 0, 0, 30),
@@ -774,18 +613,9 @@ function STKLib.Objects.Window:AddConfigTab()
             })
             Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = loadBtn})
             
-            local shareBtn = Utils.Create("TextButton", {
-                Size = UDim2.fromOffset(40, 20),
-                Position = UDim2.new(1, -90, 0.5, -10),
-                BackgroundColor3 = STKLib.Theme.Tertiary,
-                Font = STKLib.Theme.Font, Text = "Share", TextColor3 = STKLib.Theme.Text, TextSize = 12,
-                Parent = itemFrame
-            })
-            Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = shareBtn})
-            
             local deleteBtn = Utils.Create("TextButton", {
                 Size = UDim2.fromOffset(40, 20),
-                Position = UDim2.new(1, -40, 0.5, -10),
+                Position = UDim2.new(1, -90, 0.5, -10),
                 BackgroundColor3 = Color3.fromRGB(200, 50, 50),
                 Font = STKLib.Theme.Font, Text = "Del", TextColor3 = STKLib.Theme.Text, TextSize = 12,
                 Parent = itemFrame
@@ -794,13 +624,6 @@ function STKLib.Objects.Window:AddConfigTab()
             
             loadBtn.MouseButton1Click:Connect(function() window:LoadConfig(name) end)
             deleteBtn.MouseButton1Click:Connect(function() window:DeleteConfig(name) end)
-            shareBtn.MouseButton1Click:Connect(function()
-                local code = window:ShareConfig(name)
-                if code then
-                    setclipboard(code)
-                    print("STKLib: Config code copied to clipboard!")
-                end
-            end)
         end
     end
 
@@ -833,40 +656,6 @@ function STKLib.Objects.Window:AddConfigTab()
         refreshConfigList()
         print("STKLib: Config '"..name.."' deleted.")
     end
-
-    function window:ShareConfig(name)
-        local data = configs[name]
-        if not data then warn("STKLib: Config not found."); return nil end
-        if not zlib or not base64 then warn("STKLib: Missing libraries for sharing."); return nil end
-
-        local success, result = pcall(function()
-            local jsonString = HttpService:JSONEncode(data)
-            local compressed = zlib.compress(jsonString)
-            return base64.encode(compressed)
-        end)
-
-        if success then return result else warn("STKLib: Error encoding config:", result); return nil end
-    end
-
-    function window:ImportConfig(code)
-        if not zlib or not base64 then warn("STKLib: Missing libraries for importing."); return end
-        
-        local success, result = pcall(function()
-            local decodedB64 = base64.decode(code)
-            local decompressed = zlib.decompress(decodedB64)
-            return HttpService:JSONDecode(decompressed)
-        end)
-        
-        if success then
-            local configName = "Imported-"..string.sub(HttpService:GenerateGUID(false), 1, 4)
-            configs[configName] = result
-            refreshConfigList()
-            window:LoadConfig(configName)
-            print("STKLib: Successfully imported config as '"..configName.."'.")
-        else
-            warn("STKLib: Failed to import config. Invalid code.", result)
-        end
-    end
     
     createBtn.MouseButton1Click:Connect(function()
         local name = nameInput.Text
@@ -875,15 +664,6 @@ function STKLib.Objects.Window:AddConfigTab()
             nameInput.Text = ""
         else
             warn("STKLib: Invalid or duplicate config name.")
-        end
-    end)
-    
-    importBtn.MouseButton1Click:Connect(function()
-        local code = getclipboard()
-        if code and type(code) == "string" and #code > 10 then
-            window:ImportConfig(code)
-        else
-            warn("STKLib: Clipboard does not contain a valid config code.")
         end
     end)
     
