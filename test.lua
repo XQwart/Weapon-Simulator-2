@@ -30,7 +30,7 @@ STKLib.Theme = {
     Font = Enum.Font.Gotham,
     FontBold = Enum.Font.GothamBold,
 
-    Transparency = 0.2, -- 0 is opaque, 1 is transparent.
+    Transparency = 0.3, -- Increased transparency for a glass-like effect
     AnimationSpeed = 0.2
 }
 
@@ -154,6 +154,23 @@ function STKLib.Objects.Window:InitializeUI()
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.Header
     })
+
+    -- Close Button
+    local closeButton = Utils.Create("TextButton", {
+        Name = "CloseButton",
+        Size = UDim2.fromOffset(30, 30),
+        Position = UDim2.new(1, -40, 0, 5),
+        BackgroundTransparency = 1,
+        Text = "X",
+        TextColor3 = STKLib.Theme.Text,
+        Font = STKLib.Theme.FontBold,
+        TextSize = 16,
+        Parent = self.Header
+    })
+
+    closeButton.MouseButton1Click:Connect(function()
+        self:Toggle()
+    end)
 
     -- Tab Container (Top)
     self.TabContainer = Utils.Create("Frame", {
