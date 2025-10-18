@@ -21,16 +21,16 @@ STKLib.Instance = nil  -- Track the single instance of the library
 -- /////////////////////////////////////////////////////////////////////////////
 
 STKLib.Theme = {
-    Background = Color3.fromRGB(24, 24, 24),    -- #181818
-    Accent = Color3.fromRGB(255, 165, 0),       -- #FFA500
-    Text = Color3.fromRGB(255, 255, 255),
+    Background = Color3.fromRGB(30, 30, 30),    -- Dark gray background
+    Accent = Color3.fromRGB(255, 165, 0),       -- Orange accent
+    Text = Color3.fromRGB(255, 255, 255),       -- White text
     SecondaryText = Color3.fromRGB(160, 160, 160),
-    Secondary = Color3.fromRGB(40, 40, 40),
+    Secondary = Color3.fromRGB(50, 50, 50),
 
     Font = Enum.Font.Gotham,
     FontBold = Enum.Font.GothamBold,
 
-    Transparency = 0.3, -- Increased transparency for a glass-like effect
+    Transparency = 0.2, -- Transparency for a glass-like effect
     AnimationSpeed = 0.2
 }
 
@@ -131,24 +131,14 @@ function STKLib.Objects.Window:InitializeUI()
         Parent = self.MainFrame
     })
 
-    -- Logo
-    local logo = Utils.Create("ImageLabel", {
-        Name = "Logo",
-        Size = UDim2.fromOffset(24, 24),
-        Position = UDim2.fromOffset(10, 8),
-        BackgroundTransparency = 1,
-        Image = STKLib.Icons.Logo,
-        Parent = self.Header
-    })
-    
     -- Title
     local titleLabel = Utils.Create("TextLabel", {
         Name = "Title",
         Size = UDim2.new(0, 100, 1, 0),
-        Position = UDim2.fromOffset(40, 0),
+        Position = UDim2.fromOffset(10, 0),
         BackgroundTransparency = 1,
         Font = STKLib.Theme.FontBold,
-        Text = self.Title,
+        Text = "STK",
         TextColor3 = STKLib.Theme.Text,
         TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -172,54 +162,35 @@ function STKLib.Objects.Window:InitializeUI()
         self:Toggle()
     end)
 
-    -- Tab Container (Top)
+    -- Tab Container (Left)
     self.TabContainer = Utils.Create("Frame", {
         Name = "TabContainer",
-        Size = UDim2.new(1, -150, 1, 0),
-        Position = UDim2.new(0, 140, 0, 0),
-        BackgroundTransparency = 1,
-        Parent = self.Header
+        Size = UDim2.new(0, 150, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        BackgroundTransparency = 0.5,
+        Parent = self.MainFrame
     })
     local tabLayout = Utils.Create("UIListLayout", {
-        FillDirection = Enum.FillDirection.Horizontal,
+        FillDirection = Enum.FillDirection.Vertical,
         SortOrder = Enum.SortOrder.LayoutOrder,
-        VerticalAlignment = Enum.VerticalAlignment.Center,
-        Padding = UDim.new(0, 10),
+        VerticalAlignment = Enum.VerticalAlignment.Top,
+        Padding = UDim.new(0, 5),
         Parent = self.TabContainer
     })
 
     -- Body
     self.Body = Utils.Create("Frame", {
         Name = "Body",
-        Size = UDim2.new(1, 0, 1, -40),
-        Position = UDim2.new(0, 0, 0, 40),
+        Size = UDim2.new(1, -150, 1, -40),
+        Position = UDim2.new(0, 150, 0, 40),
         BackgroundTransparency = 1,
         Parent = self.MainFrame
-    })
-
-    -- SubTab Container (Left)
-    self.SubTabContainer = Utils.Create("ScrollingFrame", {
-        Name = "SubTabContainer",
-        Size = UDim2.new(0, 150, 1, 0),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        ScrollBarThickness = 4,
-        ScrollBarImageColor3 = STKLib.Theme.Accent,
-        Parent = self.Body
-    })
-    local subTabLayout = Utils.Create("UIListLayout", {
-        FillDirection = Enum.FillDirection.Vertical,
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 5),
-        Parent = self.SubTabContainer
     })
 
     -- Content Container (Right)
     self.ContentContainer = Utils.Create("Frame", {
         Name = "ContentContainer",
-        Size = UDim2.new(1, -150, 1, 0),
-        Position = UDim2.new(0, 150, 0, 0),
+        Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
         Parent = self.Body
     })
@@ -288,8 +259,7 @@ function STKLib.Objects.Window:AddTab(name)
     -- Create the top tab button
     tab.Button = Utils.Create("TextButton", {
         Name = name,
-        Size = UDim2.new(0, 0, 0, 25),
-        AutomaticSize = Enum.AutomaticSize.X,
+        Size = UDim2.new(1, 0, 0, 25),
         BackgroundTransparency = 1,
         Font = STKLib.Theme.Font,
         Text = "  "..name.."  ",
@@ -298,42 +268,6 @@ function STKLib.Objects.Window:AddTab(name)
         Parent = self.TabContainer
     })
 
-    local indicator = Utils.Create("Frame", {
-        Name = "Indicator",
-        Size = UDim2.new(1, -10, 0, 2),
-        Position = UDim2.new(0.5, 0, 1, -2),
-        AnchorPoint = Vector2.new(0.5, 1),
-        BackgroundColor3 = STKLib.Theme.Accent,
-        BorderSizePixel = 0,
-        Visible = false,
-        Parent = tab.Button
-    })
-    Utils.Create("UICorner", {Parent = indicator})
-    
-    -- SubTab list for this tab
-    tab.SubTabList = Utils.Create("Frame", {
-        Name = name .. "_SubTabs",
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundTransparency = 1,
-        Visible = false,
-        Parent = self.SubTabContainer
-    })
-    Utils.Create("UIListLayout", {
-        FillDirection = Enum.FillDirection.Vertical,
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 5),
-        Parent = tab.SubTabList
-    })
-    
-    -- Content container for this tab
-    tab.Content = Utils.Create("Frame", {
-        Name = name.."_Content",
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundTransparency = 1,
-        Visible = false,
-        Parent = self.ContentContainer,
-    })
-    
     tab.Button.MouseButton1Click:Connect(function()
         self:SetActiveTab(tab)
     end)
@@ -351,18 +285,10 @@ function STKLib.Objects.Window:SetActiveTab(tabToActivate)
     
     for _, tab in ipairs(self.Tabs) do
         local isActive = (tab == tabToActivate)
-        tab.SubTabList.Visible = isActive
-        tab.Content.Visible = isActive
         tab.Button.TextColor3 = isActive and STKLib.Theme.Text or STKLib.Theme.SecondaryText
-        tab.Button.Indicator.Visible = isActive
     end
     
     self.ActiveTab = tabToActivate
-    
-    -- Activate the first sub-tab if one exists and none are active
-    if #tabToActivate.SubTabs > 0 and not tabToActivate.ActiveSubTab then
-        tabToActivate:SetActiveSubTab(tabToActivate.SubTabs[1])
-    end
 end
 
 -- /////////////////////////////////////////////////////////////////////////////
@@ -388,9 +314,8 @@ function STKLib.Objects.Tab:AddSubTab(name)
         Text = name,
         TextColor3 = STKLib.Theme.SecondaryText,
         TextSize = 14,
-        Parent = tab.SubTabList
+        Parent = tab.Window.ContentContainer
     })
-    Utils.Create("UICorner", { CornerRadius = UDim.new(0, 4), Parent = subTab.Button })
     
     -- Content area for this sub-tab
     subTab.Content = Utils.Create("ScrollingFrame", {
@@ -402,18 +327,7 @@ function STKLib.Objects.Tab:AddSubTab(name)
         ScrollBarThickness = 4,
         ScrollBarImageColor3 = STKLib.Theme.Accent,
         Visible = false,
-        Parent = tab.Content
-    })
-    local layout = Utils.Create("UIListLayout", {
-        FillDirection = Enum.FillDirection.Vertical,
-        Padding = UDim.new(0, 10),
-        Parent = subTab.Content
-    })
-    local padding = Utils.Create("UIPadding", {
-        PaddingTop = UDim.new(0, 15),
-        PaddingLeft = UDim.new(0, 15),
-        PaddingRight = UDim.new(0, 15),
-        Parent = subTab.Content
+        Parent = tab.Window.ContentContainer
     })
     
     subTab.Button.MouseButton1Click:Connect(function()
@@ -522,168 +436,6 @@ function STKLib.Objects.SubTab:AddCheckbox(options)
     
     subTab.ParentTab.Window.Elements[element.Id] = element
     return element
-end
-
--- /////////////////////////////////////////////////////////////////////////////
--- CONFIG SYSTEM
--- /////////////////////////////////////////////////////////////////////////////
-function STKLib.Objects.Window:AddConfigTab()
-    local window = self
-    local configTab = window:AddTab("Configs")
-    local mainSubTab = configTab:AddSubTab("Manage")
-
-    -- Config list
-    mainSubTab:AddLabel("Your Configs")
-    local configListFrame = Utils.Create("ScrollingFrame", {
-        Name = "ConfigList",
-        Size = UDim2.new(1, 0, 0, 150),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        ScrollBarThickness = 2,
-        Parent = mainSubTab.Content
-    })
-    local listLayout = Utils.Create("UIListLayout", {
-        Parent = configListFrame,
-        Padding = UDim.new(0, 5)
-    })
-    
-    -- Controls
-    mainSubTab:AddLabel("Create & Share")
-    local nameInput = Utils.Create("TextBox", {
-        Name = "ConfigNameInput",
-        Size = UDim2.new(1, 0, 0, 30),
-        BackgroundColor3 = STKLib.Theme.Secondary,
-        Font = STKLib.Theme.Font,
-        Text = "",
-        PlaceholderText = "Enter config name...",
-        TextColor3 = STKLib.Theme.Text,
-        TextSize = 14,
-        Parent = mainSubTab.Content
-    })
-    Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = nameInput})
-    
-    local buttonsFrame = Utils.Create("Frame", {
-        Size = UDim2.new(1, 0, 0, 30),
-        BackgroundTransparency = 1,
-        Parent = mainSubTab.Content
-    })
-    Utils.Create("UIListLayout", {
-        FillDirection = Enum.FillDirection.Horizontal,
-        HorizontalAlignment = Enum.HorizontalAlignment.Center,
-        VerticalAlignment = Enum.VerticalAlignment.Center,
-        Padding = UDim.new(0, 10),
-        Parent = buttonsFrame
-    })
-
-    local function createButton(text, parent)
-        local btn = Utils.Create("TextButton", {
-            Name = text,
-            Size = UDim2.new(0.3, 0, 1, 0),
-            BackgroundColor3 = STKLib.Theme.Accent,
-            Font = STKLib.Theme.Font,
-            Text = text,
-            TextColor3 = STKLib.Theme.Text,
-            TextSize = 14,
-            Parent = parent
-        })
-        Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = btn})
-        return btn
-    end
-
-    local createBtn = createButton("Create", buttonsFrame)
-    
-    -- Config state
-    local configs = {}
-    
-    local function refreshConfigList()
-        configListFrame:ClearAllChildren()
-        
-        for name in pairs(configs) do
-            local itemFrame = Utils.Create("Frame", {
-                Name = name,
-                Size = UDim2.new(1, 0, 0, 30),
-                BackgroundColor3 = STKLib.Theme.Secondary,
-                Parent = configListFrame
-            })
-            Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = itemFrame})
-            
-            local label = Utils.Create("TextLabel", {
-                Size = UDim2.new(0.5, 0, 1, 0),
-                Position = UDim2.fromOffset(10, 0),
-                BackgroundTransparency = 1,
-                Font = STKLib.Theme.Font,
-                Text = name,
-                TextColor3 = STKLib.Theme.Text,
-                TextSize = 14,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = itemFrame
-            })
-            
-            local loadBtn = Utils.Create("TextButton", {
-                Size = UDim2.fromOffset(40, 20),
-                Position = UDim2.new(1, -140, 0.5, -10),
-                BackgroundColor3 = STKLib.Theme.Accent,
-                Font = STKLib.Theme.Font, Text = "Load", TextColor3 = STKLib.Theme.Text, TextSize = 12,
-                Parent = itemFrame
-            })
-            Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = loadBtn})
-            
-            local deleteBtn = Utils.Create("TextButton", {
-                Size = UDim2.fromOffset(40, 20),
-                Position = UDim2.new(1, -90, 0.5, -10),
-                BackgroundColor3 = Color3.fromRGB(200, 50, 50),
-                Font = STKLib.Theme.Font, Text = "Del", TextColor3 = STKLib.Theme.Text, TextSize = 12,
-                Parent = itemFrame
-            })
-            Utils.Create("UICorner", {CornerRadius = UDim.new(0, 4), Parent = deleteBtn})
-            
-            loadBtn.MouseButton1Click:Connect(function() window:LoadConfig(name) end)
-            deleteBtn.MouseButton1Click:Connect(function() window:DeleteConfig(name) end)
-        end
-    end
-
-    function window:SaveConfig(name)
-        local data = {}
-        for id, element in pairs(window.Elements) do
-            if element.Value ~= nil then
-                data[id] = element.Value
-            end
-        end
-        configs[name] = data
-        refreshConfigList()
-        print("STKLib: Config '"..name.."' saved.")
-    end
-
-    function window:LoadConfig(name)
-        local data = configs[name]
-        if not data then return warn("STKLib: Config '"..name.."' not found.") end
-        
-        for id, value in pairs(data) do
-            if window.Elements[id] and window.Elements[id].SetValue then
-                window.Elements[id]:SetValue(value, false) -- Trigger callbacks to update game state
-            end
-        end
-        print("STKLib: Config '"..name.."' loaded.")
-    end
-
-    function window:DeleteConfig(name)
-        configs[name] = nil
-        refreshConfigList()
-        print("STKLib: Config '"..name.."' deleted.")
-    end
-    
-    createBtn.MouseButton1Click:Connect(function()
-        local name = nameInput.Text
-        if name and name ~= "" and not configs[name] then
-            window:SaveConfig(name)
-            nameInput.Text = ""
-        else
-            warn("STKLib: Invalid or duplicate config name.")
-        end
-    end)
-    
-    refreshConfigList()
 end
 
 return STKLib
